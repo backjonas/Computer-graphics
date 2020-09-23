@@ -73,10 +73,9 @@ vector<Vertex> unpackIndexedData(
 		// f[2] is the index of the position of the second vertex
 		// ...
 
-        for (int i = 0; i < 6; i+=2)
-        {
+        for (int i = 0; i < 6; i+=2) {
             Vertex v;
-            v.position = positions[f[ i]];
+            v.position = positions[f[i]];
             v.normal = normals[f[i + 1]];
             vertices.push_back(v);
         }
@@ -135,8 +134,7 @@ vector<Vertex> loadUserGeneratedModel() {
 		// YOUR CODE HERE (R2)
 		// Figure out the correct positions of the three vertices of this face.
         
-        float pos1x, pos1z, pos2x, pos2z, angle_increment;
-        angle_increment = 2 * FW_PI / faces;
+        float pos1x, pos1z, pos2x, pos2z;
 
         pos1x = FW::cos(angle_increment * i) * radius;
         pos1z = FW::sin(angle_increment * i) * radius;
@@ -480,13 +478,23 @@ vector<Vertex> App::loadObjFileModel(string filename) {
 		iss >> s;
 
 		if (s == "v") { // vertex position
-			// YOUR CODE HERE (R4)
-			// Read the three vertex coordinates (x, y, z) into 'v'.
-			// Store a copy of 'v' in 'positions'.
-			// See std::vector documentation for push_back.
+            // YOUR CODE HERE (R4)
+            // Read the three vertex coordinates (x, y, z) into 'v'.
+            // Store a copy of 'v' in 'positions'.
+            // See std::vector documentation for push_back.
+
+            iss >> v[0];
+            iss >> v[1];
+            iss >> v[2];
+            positions.push_back(v);
 		} else if (s == "vn") { // normal
-			// YOUR CODE HERE (R4)
-			// Similar to above.
+            // YOUR CODE HERE (R4)
+            // Similar to above.
+
+            iss >> v[0];
+            iss >> v[1];
+            iss >> v[2];
+            normals.push_back(v);
 		} else if (s == "f") { // face
 			// YOUR CODE HERE (R4)
 			// Read the indices representing a face and store it in 'faces'.
@@ -500,9 +508,21 @@ vector<Vertex> App::loadObjFileModel(string filename) {
 			// the texture indices by reading them into a temporary variable.
 
 			unsigned sink; // Temporary variable for reading the unused texture indices.
+            unsigned position;
+            unsigned normal;
 
 			// Note that in C++ we index things starting from 0, but face indices in OBJ format start from 1.
 			// If you don't adjust for that, you'll index past the range of your vectors and get a crash.
+            for (int i = 0; i < 6; i += 2) {
+                iss >> position;
+                iss >> sink;
+                iss >> normal;
+
+                f[i] = position - 1;
+                f[i + 1] = normal - 1;
+            }
+
+            faces.push_back(f);
 
 			// It might be a good idea to print the indices to see that they were read correctly.
 			// cout << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " " << f[4] << " " << f[5] << endl;
