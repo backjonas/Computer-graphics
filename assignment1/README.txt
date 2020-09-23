@@ -5,8 +5,8 @@
 
 Student name: Jonas Bäck
 Student number: 665898
-Hours spent on requirements (approx.):
-Hours spent on extra credit (approx.):
+Hours spent on requirements (approx.): 6 h
+Hours spent on extra credit (approx.): 10 min
 
 # First, some questions about where you come from and how you got started.
 # Your answers in this section will be used to improve the course.
@@ -46,12 +46,14 @@ OpenGL: -
 (Try to get everything done! Based on previous data, virtually everyone who put in the work and did well in the first two assignments ended up finishing the course, and also reported a high level of satisfaction at the end of the course.)
 
                             opened this file (0p): done
-                         R1 Moving an object (1p): not done
-R2 Generating a simple cone mesh and normals (3p): not done
-  R3 Converting mesh data for OpenGL viewing (3p): not done
-           R4 Loading a large mesh from file (3p): not done
+                         R1 Moving an object (1p): done
+R2 Generating a simple cone mesh and normals (3p): done
+  R3 Converting mesh data for OpenGL viewing (3p): done
+           R4 Loading a large mesh from file (3p): done
 
 # Did you do any extra credit work?
+
+	Version control
 
 (Describe what you did and, if there was a substantial amount of work involved, how you did it. Also describe how to use/activate your extra features, if they are interactive.)
 
