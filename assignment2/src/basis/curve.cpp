@@ -37,10 +37,22 @@ Curve coreBezier(const Vec3f& p0,
 	// computing points on the spline
 
 	Mat4f B;
-	// ...
+    B.setRow(0, Vec4f(1, -3, 3, -1));
+    B.setRow(1, Vec4f(0, 3, -6, 3));
+    B.setRow(2, Vec4f(0, 0, 3, -3));
+    B.setRow(3, Vec4f(0, 0, 0, 1));
+	
+    Mat4f P;
+    P.setCol(0, Vec4f(p0.x, p0.y, p0.z, 0));
+    P.setCol(1, Vec4f(p1.x, p1.y, p1.z, 0));
+    P.setCol(2, Vec4f(p2.x, p2.y, p2.z, 0));
+    P.setCol(3, Vec4f(p3.x, p3.y, p3.z, 0));
 
 	for (unsigned i = 0; i <= steps; ++i) {
-		// ...
+        float j = static_cast<float>(i) / steps;
+        Vec4f T = Vec4f(1, j, pow(j, 2), pow(j, 3));
+        Vec4f result = (P * B) * T;
+        R[i].V = result.getXYZ();
 	}
 
 	return R;
@@ -69,6 +81,11 @@ Curve evalBezier(const vector<Vec3f>& P, unsigned steps, bool adaptive, float er
 		_CrtDbgBreak();
 		exit(0);
 	}
+    Curve R;
+    for (unsigned i = 0; i < P.size() - 1; i += 3) {
+        Curve temp = coreBezier(P[i], P[i + 1], P[i + 2], P[i + 3], Vec3f(0), steps);
+        R.insert(R.end(), temp.begin(), temp.end());
+    }
 
     // YOUR CODE HERE (R1):
     // You should implement this function so that it returns a Curve
@@ -100,7 +117,7 @@ Curve evalBezier(const vector<Vec3f>& P, unsigned steps, bool adaptive, float er
     cerr << "\t>>> Returning empty curve." << endl;
 
     // Right now this will just return this empty curve.
-    return Curve();
+    return R;
 }
 
 // the P argument holds the control points and steps gives the amount of uniform tessellation.
