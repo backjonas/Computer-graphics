@@ -42,16 +42,16 @@ Curve coreBezier(const Vec3f& p0,
     B.setRow(2, Vec4f(0, 0, 3, -3));
     B.setRow(3, Vec4f(0, 0, 0, 1));
 	
-    Mat4f P;
-    P.setCol(0, Vec4f(p0.x, p0.y, p0.z, 0));
-    P.setCol(1, Vec4f(p1.x, p1.y, p1.z, 0));
-    P.setCol(2, Vec4f(p2.x, p2.y, p2.z, 0));
-    P.setCol(3, Vec4f(p3.x, p3.y, p3.z, 0));
+    Mat4f G;
+    G.setCol(0, Vec4f(p0.x, p0.y, p0.z, 0));
+    G.setCol(1, Vec4f(p1.x, p1.y, p1.z, 0));
+    G.setCol(2, Vec4f(p2.x, p2.y, p2.z, 0));
+    G.setCol(3, Vec4f(p3.x, p3.y, p3.z, 0));
 
 	for (unsigned i = 0; i <= steps; ++i) {
         float j = static_cast<float>(i) / steps;
         Vec4f T = Vec4f(1, j, pow(j, 2), pow(j, 3));
-        Vec4f result = (P * B) * T;
+        Vec4f result = G * B * T;
         R[i].V = result.getXYZ();
 	}
 
@@ -81,6 +81,7 @@ Curve evalBezier(const vector<Vec3f>& P, unsigned steps, bool adaptive, float er
 		_CrtDbgBreak();
 		exit(0);
 	}
+
     Curve R;
     for (unsigned i = 0; i < P.size() - 1; i += 3) {
         Curve temp = coreBezier(P[i], P[i + 1], P[i + 2], P[i + 3], Vec3f(0), steps);
@@ -129,6 +130,41 @@ Curve evalBspline(const vector<Vec3f>& P, unsigned steps, bool adaptive, float e
         exit(0);
     }
 
+    Mat4f B1;
+    B1.setRow(0, Vec4f(1, -3, 3, -1));
+    B1.setRow(1, Vec4f(4, 0, -6, 3));
+    B1.setRow(2, Vec4f(1, 3, 3, -3));
+    B1.setRow(3, Vec4f(0, 0, 0, 1));
+    B1 *= (1.0 / 6);
+
+    Mat4f B2;
+    B2.setRow(0, Vec4f(1, -3, 3, -1));
+    B2.setRow(1, Vec4f(0, 3, -6, 3));
+    B2.setRow(2, Vec4f(0, 0, 3, -3));
+    B2.setRow(3, Vec4f(0, 0, 0, 1));
+    B2.invert();
+
+    Curve R;
+    for (unsigned i = 0; i < P.size() - 3; i++) {
+        Mat4f G;
+        G.setRow(0, Vec4f(P[i].x, P[i + 1].x, P[i + 2].x, P[i + 3].x));
+        G.setRow(1, Vec4f(P[i].y, P[i + 1].y, P[i + 2].y, P[i + 3].y));
+        G.setRow(2, Vec4f(P[i].z, P[i + 1].z, P[i + 2].z, P[i + 3].z));
+        G.setRow(3, Vec4f(0, 0, 0, 0));
+
+        Mat4f bezierG = G * B1 * B2;
+        vector<Vec3f> bezierP;
+
+        for (unsigned j = 0; j < 4; j++) {
+            Vec4f bezierVec = bezierG.col(j);
+            bezierP.push_back(bezierVec.getXYZ());
+        }
+
+        Curve temp = evalBezier(bezierP, steps, adaptive, errorbound, minstep);
+        R.insert(R.end(), temp.begin(), temp.end());
+
+    }
+
     // YOUR CODE HERE (R2):
     // We suggest you implement this function via a change of basis from
 	// B-spline to Bezier.  That way, you can just call your evalBezier function.
@@ -144,7 +180,7 @@ Curve evalBspline(const vector<Vec3f>& P, unsigned steps, bool adaptive, float e
     cerr << "\t>>> Returning empty curve." << endl;
 
     // Return an empty curve right now.
-    return Curve();
+    return R;
 }
 
 Curve evalCircle(float radius, unsigned steps) {
