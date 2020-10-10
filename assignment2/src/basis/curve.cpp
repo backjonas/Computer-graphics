@@ -83,7 +83,7 @@ Curve evalBezier(const vector<Vec3f>& P, unsigned steps, bool adaptive, float er
 	}
 
     Curve R;
-    for (unsigned i = 0; i < P.size() - 1; i += 3) {
+    for (unsigned i = 0; i < P.size() - 3; i += 3) {
         Curve temp = coreBezier(P[i], P[i + 1], P[i + 2], P[i + 3], Vec3f(0), steps);
         R.insert(R.end(), temp.begin(), temp.end());
     }
