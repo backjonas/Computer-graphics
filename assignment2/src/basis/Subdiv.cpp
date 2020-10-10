@@ -195,12 +195,18 @@ void MeshWithConnectivity::LoopSubdivision() {
 					norm = 0.5f * (normals[v0] + normals[v1]);
 
 				new_positions.push_back(pos);
+				//std::cout << "RealPos: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+				//std::cout << "i: " << i << " j: " << j << "new_positions.size(): " << new_positions.size() << std::endl;
+				//for (int k = 0; k < new_positions.size(); k++) {
+				//	std::cout << k << " Actual: " << new_positions[k][0] << " " << new_positions[k][1] << " " << new_positions[k][2] << std::endl;
+				//}
 				new_colors.push_back(col);
 				new_normals.push_back(norm);
 
 				// YOUR CODE HERE (R3):
 				// Map the edge to the correct vertex index.
 				// This is just one line! Use new_vertices and the index of the position that was just pushed back to the vector.
+				new_vertices[edge] = (new_positions.size() - 1);
 				}
 			}
 	}
@@ -268,9 +274,18 @@ void MeshWithConnectivity::LoopSubdivision() {
 
 		// YOUR CODE HERE (R3):
 		// fill in X and Y (it's the same for both)
-		//auto edge_a = std::make_pair(min(X, Y), max(X, Y));
-		//auto edge_b = ...
-		//auto edge_c = ...
+		int e0 = even[0], e1 = even[1], e2 = even[2]; 
+		auto edge_a = std::make_pair(min(e0, e1), max(e0, e1));
+		auto edge_b = std::make_pair(min(e1, e2), max(e1, e2));
+		auto edge_c = std::make_pair(min(e2, e0), max(e2, e0));
+
+		Vec3i odd = Vec3i(new_vertices[edge_a], new_vertices[edge_b], new_vertices[edge_c]);
+		int o0 = odd[0], o1 = odd[1], o2 = odd[2];
+
+		new_indices.push_back(odd);
+		new_indices.push_back(Vec3i(e0, o0, o2));
+		new_indices.push_back(Vec3i(e1, o1, o0));
+		new_indices.push_back(Vec3i(e2, o2, o1));
 
 		// The edges edge_a, edge_b and edge_c now define the vertex indices via new_vertices.
 		// (The mapping is done in the loop above.)
@@ -284,14 +299,13 @@ void MeshWithConnectivity::LoopSubdivision() {
 
 		// NOTE: REMOVE the following line after you're done with the new triangles.
 		// This just keeps the mesh intact and serves as an example on how to add new triangles.
-		new_indices.push_back( Vec3i( even[0], even[1], even[2] ) );
 	}
 
 	// ADD THESE LINES when R3 is finished. Replace the originals with the repositioned data.
-	//indices = std::move(new_indices);
-	//positions = std::move(new_positions);
-	//normals = std::move(new_normals);
-	//colors = std::move(new_colors);
+	indices = std::move(new_indices);
+	positions = std::move(new_positions);
+	normals = std::move(new_normals);
+	colors = std::move(new_colors);
 }
 
 } // namespace FW
