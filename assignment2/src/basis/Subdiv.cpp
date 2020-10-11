@@ -175,6 +175,7 @@ void MeshWithConnectivity::LoopSubdivision() {
 			for (int j = 0; j < 3; ++j) {
 				int v0 = indices[i][j];
 				int v1 = indices[i][(j + 1) % 3];
+				int v2 = indices[i][(j + 2) % 3];
 
 				// Map the edge endpoint indices to new vertex index.
 				// We use min and max because the edge direction does not matter when we finally
@@ -189,24 +190,35 @@ void MeshWithConnectivity::LoopSubdivision() {
 					// You will need to use the neighbor information to find the correct vertices and then combine the four corner vertices with the correct weights.
 					// Be sure to see section 3.2 in the handout for an in depth explanation of the neighbor index tables; the scheme is somewhat involved.
 					Vec3f pos, col, norm;
-					// This default implementation just puts the new vertex at the edge midpoint.
-					pos = 0.5f * (positions[v0] + positions[v1]);
-					col = 0.5f * (colors[v0] + colors[v1]);
-					norm = 0.5f * (normals[v0] + normals[v1]);
+					Vec3f neighborPos = 0.f, neighborColor = 0.f, neighborNorm = 0.f;
+
+					int neighborIndex = neighborTris[i][j];
+					if (neighborIndex != -1) {
+						Vec3i neighborTri = indices[neighborIndex];
+						int n0 = neighborTri[0], n1 = neighborTri[1], n2 = neighborTri[2];
+						if (!(n0 == v0 || n0 == v1)) {
+							neighborPos = positions[n0];
+						}
+						else if (!(n1 == v0 || n1 == v1)) {
+							neighborPos = positions[n1];
+						}
+						else if (!(n2 == v0 || n2 == v1)) {
+							neighborPos = positions[n2];
+						}
+					}
+
+					pos = (3.f / 8.f) * (positions[v0] + positions[v1]) + (1.f / 8.f) * (positions[v2] + neighborPos);
+					col = (3.f / 8.f) * (colors[v0] + colors[v1]) + (1.f / 8.f) * (colors[v2] + neighborColor);
+					norm = (3.f / 8.f) * (normals[v0] + normals[v1]) + (1.f / 8.f) * (normals[v2] + neighborNorm);
 
 				new_positions.push_back(pos);
-				//std::cout << "RealPos: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-				//std::cout << "i: " << i << " j: " << j << "new_positions.size(): " << new_positions.size() << std::endl;
-				//for (int k = 0; k < new_positions.size(); k++) {
-				//	std::cout << k << " Actual: " << new_positions[k][0] << " " << new_positions[k][1] << " " << new_positions[k][2] << std::endl;
-				//}
 				new_colors.push_back(col);
 				new_normals.push_back(norm);
 
 				// YOUR CODE HERE (R3):
 				// Map the edge to the correct vertex index.
 				// This is just one line! Use new_vertices and the index of the position that was just pushed back to the vector.
-				new_vertices[edge] = (new_positions.size() - 1);
+				new_vertices[edge] = new_positions.size() - 1;
 				}
 			}
 	}
