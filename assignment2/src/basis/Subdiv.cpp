@@ -194,17 +194,11 @@ void MeshWithConnectivity::LoopSubdivision() {
 
 					int neighborIndex = neighborTris[i][j];
 					if (neighborIndex != -1) {
-						Vec3i neighborTri = indices[neighborIndex];
-						int n0 = neighborTri[0], n1 = neighborTri[1], n2 = neighborTri[2];
-						if (!(n0 == v0 || n0 == v1)) {
-							neighborPos = positions[n0];
-						}
-						else if (!(n1 == v0 || n1 == v1)) {
-							neighborPos = positions[n1];
-						}
-						else if (!(n2 == v0 || n2 == v1)) {
-							neighborPos = positions[n2];
-						}
+						int edgeIndex = (neighborEdges[i][j] + 2) % 3;
+						int correctVertex = indices[neighborIndex][edgeIndex];
+						neighborPos = positions[correctVertex];
+						neighborColor = colors[correctVertex];
+						neighborNorm = normals[correctVertex];
 					}
 
 					pos = (3.f / 8.f) * (positions[v0] + positions[v1]) + (1.f / 8.f) * (positions[v2] + neighborPos);
@@ -258,9 +252,34 @@ void MeshWithConnectivity::LoopSubdivision() {
 			// vertices with a visible color, so you can ensure that the 1-ring generated is correct.
 			// The solution exe implements this so you can see an example of what you can do with the
 			// highlight mode there.
-			pos = positions[v0];
-			col = colors[v0];
-			norm = normals[v0];
+			int n = 0;
+			Vec3f pSum = 0;
+			Vec3f cSum = 0;
+			Vec3f nSum = 0;
+			int curr_i = neighborTris[i][j];
+			int curr_j = neighborEdges[i][j];
+			int vertIndex;
+			int buffer;
+
+			while ((curr_i != i && curr_j != j) && curr_i != -1) {
+				vertIndex = indices[curr_i][(curr_j + 1) % 3];
+				pSum += positions[vertIndex];
+				cSum += colors[vertIndex];
+				nSum += normals[vertIndex];
+				buffer = neighborTris[curr_i][(curr_j + 2) % 3];
+				curr_j = neighborEdges[curr_i][(curr_j + 2) % 3];
+				curr_i = buffer;
+				n += 1;
+			}
+
+			float B = n > 3 ? 3.f / (8 * n) : 3.f / 16;
+			pos = (1.0f - n * B) * positions[v0] + B * pSum;
+			col = (1.0f - n * B) * colors[v0] + B * cSum;;
+			norm = (1.0f - n * B) * normals[v0] + B * nSum;;
+
+			//pos = positions[v0];
+			//col = colors[v0];
+			//norm = normals[v0];
 
 
 			// Stop here if we're doing the debug pass since we don't actually need to modify the mesh
