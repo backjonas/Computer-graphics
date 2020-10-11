@@ -256,13 +256,13 @@ void MeshWithConnectivity::LoopSubdivision() {
 			Vec3f pSum = 0;
 			Vec3f cSum = 0;
 			Vec3f nSum = 0;
-			int curr_i = neighborTris[i][j];
-			int curr_j = neighborEdges[i][j];
+			int curr_i = i;
+			int curr_j = j;
 			int vertIndex;
 			int buffer;
 
-			while ((curr_i != i && curr_j != j) && curr_i != -1) {
-				vertIndex = indices[curr_i][(curr_j + 1) % 3];
+			do {
+				vertIndex = indices[curr_i][(curr_j + 2) % 3];
 				pSum += positions[vertIndex];
 				cSum += colors[vertIndex];
 				nSum += normals[vertIndex];
@@ -270,16 +270,12 @@ void MeshWithConnectivity::LoopSubdivision() {
 				curr_j = neighborEdges[curr_i][(curr_j + 2) % 3];
 				curr_i = buffer;
 				n += 1;
-			}
+			} while (curr_i != i && curr_i != -1);
 
 			float B = n > 3 ? 3.f / (8 * n) : 3.f / 16;
 			pos = (1.0f - n * B) * positions[v0] + B * pSum;
 			col = (1.0f - n * B) * colors[v0] + B * cSum;;
 			norm = (1.0f - n * B) * normals[v0] + B * nSum;;
-
-			//pos = positions[v0];
-			//col = colors[v0];
-			//norm = normals[v0];
 
 
 			// Stop here if we're doing the debug pass since we don't actually need to modify the mesh
