@@ -401,6 +401,9 @@ void App::renderSkeleton() {
 		// (If you understand transformation matrices correctly, you can directly
 		// read the these vectors off of the matrices.)
 		Vec3f right, up, ahead;
+		right = Vec4f(transforms[i].getCol(0)).getXYZ();
+		up = Vec4f(transforms[i].getCol(1)).getXYZ();
+		ahead = Vec4f(transforms[i].getCol(2)).getXYZ();
 		// Then let's draw some lines to show the joint coordinate system.
 		// Draw a small coloured line segment from the joint's world position towards
 		// each of its local coordinate axes (the line length should be determined by "scale").
