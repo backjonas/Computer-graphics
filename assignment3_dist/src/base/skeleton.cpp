@@ -50,6 +50,10 @@ void Skeleton::updateToWorldTransforms() {
 void Skeleton::updateToWorldTransforms(unsigned joint_index, const Mat4f& parent_to_world) {
 	// YOUR CODE HERE (R1)
 	// Update transforms for joint at joint_index and its children.
+	for (auto child : joints_[joint_index].children) {
+		updateToWorldTransforms(child, joints_[child].to_parent * parent_to_world);
+	}
+	joints_[joint_index].to_world = parent_to_world;
 }
 
 void Skeleton::computeToBindTransforms() {
@@ -280,7 +284,7 @@ float Skeleton::normalizeScale()
 	float scale = 0;
 
 	for (auto& j : joints_)
-		scale = max(scale, abs(j.position).max());
+		scale = FW::max(scale, abs(j.position).max());
 	scale *= 2;
 	for (auto& j : joints_)
 		j.position /= scale;
