@@ -380,10 +380,6 @@ void App::renderSkeleton() {
 		Vec3f joint_world_pos;
 		joint_world_pos = transforms[i] * Vec4f(0, 0, 0, 1).getXYZ();
 
-		//std::cout << "index: " << i << "\n" << std::endl;
-		//transforms[i].print();
-		//std::cout << "x: " << joint_world_pos.x << " y: " << joint_world_pos.y << " z: " << joint_world_pos.z << std::endl;
-
 		// glBegin()-glEnd() with glVertex() commands in between is how draw calls
 		// are done in immediate mode OpenGL.
 		glBegin(GL_POINTS);
@@ -413,20 +409,35 @@ void App::renderSkeleton() {
 
 		// draw the x axis... ("right")
 		glColor3f(1, 0, 0); // red
+		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
+		right = joint_world_pos + right * scale;
+		glVertex3f(right.x, right.y, right.z);
 		// glVertex3f(...); glVertex3f(...);
 
 		// ..and the y axis.. ("up")
 		glColor3f(0, 1, 0); // green
+		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
+		up = joint_world_pos + up * scale;
+		glVertex3f(up.x, up.y, up.z);
 		// glVertex3f(...); glVertex3f(...);
 
 		// ..and the z axis ("ahead").
 		glColor3f(0, 0, 1); // blue
+		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
+		ahead = joint_world_pos + ahead * scale;
+		glVertex3f(ahead.x, ahead.y, ahead.z);
 		// glVertex3f(...); glVertex3f(...);
 
 		// Finally, draw a line segment from the world position of this joint to the world
 		// position of the parent joint. You should first check if the parent exists
 		// using skel_.getJointParent(i) - it returns -1 for the root, which has no parent.
-			
+		int parent = skel_.getJointParent(i);
+		if (parent != -1) {
+			Vec3f parent_world_pos = transforms[parent] * Vec4f(0, 0, 0, 1).getXYZ();
+			glColor3f(1, 1, 1);
+			glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
+			glVertex3f(parent_world_pos.x, parent_world_pos.y, parent_world_pos.z);
+		}
 		// ...
 		glEnd(); // we're done drawing lines	
 	}
