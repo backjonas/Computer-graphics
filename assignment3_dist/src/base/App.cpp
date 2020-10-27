@@ -454,8 +454,13 @@ vector<Vertex> App::computeSSD(const vector<WeightedVertex>& source_vertices) {
 		// This starter code just copies the source vertex untouched, so the result is not animated.
 		// Replace these lines with the loop that applies the bone transforms and weights.
 		// For R5, transform the normals as well.
-		v.position = sv.position;	
-		v.normal = sv.normal;		
+		Mat4f tSum(0);
+		for (int i = 0; i < WEIGHTS_PER_VERTEX; i++) {
+			tSum += sv.weights[i] * ssd_transforms[sv.joints[i]];
+		}
+		v.position = tSum * sv.position;
+		Mat4f normalTransform = tSum.inverted().transposed();
+		v.normal = (normalTransform * Vec4f(sv.normal, 0)).getXYZ();		
 		v.color = sv.color;
 
 		skinned_vertices.push_back(v);
