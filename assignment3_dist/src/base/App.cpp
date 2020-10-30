@@ -410,21 +410,21 @@ void App::renderSkeleton() {
 		// draw the x axis... ("right")
 		glColor3f(1, 0, 0); // red
 		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
-		right = joint_world_pos + right * scale;
+		right = joint_world_pos + right.normalized(scale);
 		glVertex3f(right.x, right.y, right.z);
 		// glVertex3f(...); glVertex3f(...);
 
 		// ..and the y axis.. ("up")
 		glColor3f(0, 1, 0); // green
 		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
-		up = joint_world_pos + up * scale;
+		up = joint_world_pos + up.normalized(scale);
 		glVertex3f(up.x, up.y, up.z);
 		// glVertex3f(...); glVertex3f(...);
 
 		// ..and the z axis ("ahead").
 		glColor3f(0, 0, 1); // blue
 		glVertex3f(joint_world_pos.x, joint_world_pos.y, joint_world_pos.z);
-		ahead = joint_world_pos + ahead * scale;
+		ahead = joint_world_pos + ahead.normalized(scale);
 		glVertex3f(ahead.x, ahead.y, ahead.z);
 		// glVertex3f(...); glVertex3f(...);
 
