@@ -18,7 +18,7 @@ namespace {
 	inline Vec3f fSpring(const Vec3f& pos1, const Vec3f& pos2, float k, float rest_length) {
 		// YOUR CODE HERE (R2)
 		float length = (pos2 - pos1).length();
-		Vec3f f = k * (pos2 - pos1).normalized(length - rest_length);
+		Vec3f f = -k * (pos2 - pos1).normalized(FW::abs(length - rest_length));
 		return f;
 	}
 
@@ -74,7 +74,7 @@ void SpringSystem::reset() {
 	// Set the initial state for a particle system with one particle fixed
 	// at origin and another particle hanging off the first one with a spring.
 	// Place the second particle initially at start_pos.
-	spring_ = Spring(0, 1, spring_k, rest_length);
+	spring_ = Spring(0, 2, spring_k, rest_length);
 
 	current_state_[0] = Vec3f(0);
 	current_state_[1] = Vec3f(0);
