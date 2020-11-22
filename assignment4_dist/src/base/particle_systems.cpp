@@ -17,8 +17,8 @@ namespace {
 	// force acting on particle at pos1 due to spring attached to pos2 at the other end
 	inline Vec3f fSpring(const Vec3f& pos1, const Vec3f& pos2, float k, float rest_length) {
 		// YOUR CODE HERE (R2)
-		float length = (pos2 - pos1).length();
-		Vec3f f = -k * (pos2 - pos1).normalized(FW::abs(length - rest_length));
+		auto d = pos1 - pos2;
+		Vec3f f = -k * (d.length() - rest_length) * d.normalized();
 		return f;
 	}
 
@@ -92,8 +92,9 @@ State SpringSystem::evalF(const State& state) const {
 	f[0] = 0;
 	f[1] = 0;
 	f[2] = state[3];
-	f[3] = (fGravity(mass) + fDrag(state[3], drag_k) + 
-			fSpring(state[spring_.i1], state[spring_.i2], spring_.k, spring_.rlen)) / mass;
+	Vec3f force = fGravity(mass) + fDrag(state[3], drag_k) +
+		fSpring(state[spring_.i2], state[spring_.i1], spring_.k, spring_.rlen);
+	f[3] = force / mass;
 
 	return f;
 }
@@ -131,6 +132,21 @@ void PendulumSystem::reset() {
 	// Set the initial state for a pendulum system with n_ particles
 	// connected with springs into a chain from start_point to end_point with uniform intervals.
 	// The rest length of each spring is its length in this initial configuration.
+	springs_.clear();
+	const auto r_vec = (end_point - start_point) / (n_ - 1);
+	const auto r_len = r_vec.length();
+	for (int i = 0; i < n_ - 1; i++) {
+		current_state_[2 * i] = start_point + r_vec * i;
+		current_state_[2 * i + 1] = Vec3f(0);
+		Spring spring;
+		spring.i1 = i;
+		spring.i2 = i + 1;
+		spring.k = spring_k;
+		spring.rlen = r_len;
+		springs_.push_back(spring);
+	}
+	current_state_[2 * (n_ - 1)] = start_point + r_vec * (n_ - 1);
+	current_state_[2 * (n_ - 1) + 1] = Vec3f(0);
 }
 
 State PendulumSystem::evalF(const State& state) const {
@@ -139,6 +155,17 @@ State PendulumSystem::evalF(const State& state) const {
 	auto f = State(2 * n_);
 	// YOUR CODE HERE (R4)
 	// As in R2, return a derivative of the system state "state".
+	for (const auto& s : springs_) {
+		f[2 * s.i1 + 1] = f[2 * s.i1 + 1] + fSpring(state[2 * s.i1], state[2 * s.i2], s.k, s.rlen) + 
+						   fDrag(state[2 * s.i1 + 1], drag_k);
+		f[2 * s.i2 + 1] = f[2 * s.i2 + 1] + fSpring(state[2 * s.i2], state[2 * s.i1], s.k, s.rlen) + 
+						   fDrag(state[2 * s.i2 + 1], drag_k);
+	}
+	
+	for (int i = 1; i < n_; i++) {
+		f[i * 2] = state[i * 2 + 1];
+		f[i * 2 + 1] = (f[i * 2 + 1] + fGravity(mass)) / mass;
+	}
 	return f;
 }
 
@@ -170,6 +197,8 @@ Lines PendulumSystem::getLines() {
 	}
 	return l;
 }
+//			std::cout << "index: \nx: " << x << " y: " << y << std::endl;
+//Vec3f(d_width* x, 0, -d_height * y).print();
 
 void ClothSystem::reset() {
 	const auto spring_k = 300.0f;
@@ -179,6 +208,87 @@ void ClothSystem::reset() {
 	// Construct a particle system with a x_ * y_ grid of particles,
 	// connected with a variety of springs as described in the handout:
 	// structural springs, shear springs and flex springs.
+	springs_.clear();
+	const auto d_width = width / (x_ - 1);
+	const auto d_height = height / (y_ - 1);
+	for (int x = 0; x < x_; x++) {
+		for (int y = 0; y < y_; y++) {
+			int test = y + y_ * x;
+			current_state_[2 * (y + y_ * x)] = Vec3f(width / 2 - d_width * x, 0, d_height / 2 - d_height * y);
+			current_state_[2 * (y + y_ * x) + 1] = Vec3f(0);
+		}
+	}
+
+	// Structural springs
+	// Vertical structural
+	for (int x = 0; x < x_; x++) {
+		for (int y = 0; y < y_ - 1; y++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + y_ * x + 1;
+			spring.k = spring_k;
+			spring.rlen = d_width;
+			springs_.push_back(spring);
+		}
+	}
+	// Horizontal structural
+	for (int x = 0; x < x_ - 1; x++) {
+		for (int y = 0; y < y_; y++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + y_ * (x + 1);
+			spring.k = spring_k;
+			spring.rlen = d_height;
+			springs_.push_back(spring);
+		}
+	}
+	
+	float shear_len = FW::sqrt(FW::pow(d_height, 2) + FW::pow(d_width, 2));
+	// Shear springs
+	for (int y = 0; y < y_ - 1; y++) {
+		// Diagonally right - down
+		for (int x = 0; x < x_ - 1; x++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + 1 + y_ * (x + 1);
+			spring.k = spring_k;
+			spring.rlen = shear_len;
+			springs_.push_back(spring);
+		}
+		// Diagonally left - down
+		for (int x = 1; x < x_; x++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + 1 + y_ * (x - 1);
+			spring.k = spring_k;
+			spring.rlen = shear_len;
+			springs_.push_back(spring);
+		}
+	}
+	// Flex springs
+	// Vertical flex
+	for (int x = 0; x < x_; x++) {
+		for (int y = 0; y < y_ - 2; y++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + y_ * x + 2;
+			spring.k = spring_k;
+			spring.rlen = d_width * 2;
+			springs_.push_back(spring);
+		}
+	}
+	// Horizontal flex
+	for (int x = 0; x < x_ - 2; x++) {
+		for (int y = 0; y < y_; y++) {
+			Spring spring;
+			spring.i1 = y + y_ * x;
+			spring.i2 = y + y_ * (x + 2);
+			spring.k = spring_k;
+			spring.rlen = d_height * 2;
+			springs_.push_back(spring);
+		}
+	}
+
 }
 
 State ClothSystem::evalF(const State& state) const {
@@ -188,6 +298,21 @@ State ClothSystem::evalF(const State& state) const {
 	auto f = State(2 * n);
 	// YOUR CODE HERE (R5)
 	// This will be much like in R2 and R4.
+	for (const auto& s : springs_) {
+		f[2 * s.i1 + 1] = f[2 * s.i1 + 1] + fSpring(state[2 * s.i1], state[2 * s.i2], s.k, s.rlen);
+		f[2 * s.i2 + 1] = f[2 * s.i2 + 1] + fSpring(state[2 * s.i2], state[2 * s.i1], s.k, s.rlen);
+	}
+
+	for (int i = 1; i < n; i++) {
+		f[i * 2] = state[i * 2 + 1];
+		f[i * 2 + 1] = (f[i * 2 + 1] + fGravity(mass) + fDrag(state[2 * i + 1], drag_k)) / mass;
+	}
+	// Reset corners
+	f[0] = Vec3f(0);
+	f[1] = Vec3f(0);
+	f[(n - y_) * 2] = Vec3f(0);
+	f[(n - y_) * 2 + 1] = Vec3f(0);
+
 	return f;
 }
 
