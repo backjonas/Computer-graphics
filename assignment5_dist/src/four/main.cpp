@@ -105,7 +105,7 @@ GLuint render(RayTracer& ray_tracer, SceneParser& scene, const Args& args) {
 	// Accumulate into image
 	
 	// Loop over scanlines.
-	// #pragma omp parallel for // Uncomment this & enable OpenMP in project for parallel rendering (see handout)
+	#pragma omp parallel for // Uncomment this & enable OpenMP in project for parallel rendering (see handout)
 	for (int j = 0; j < args.height; ++j) {
 		// Print progress info
 		if (args.show_progress) ::printf("%.2f%% \r", lines_done * 100.0f / image_pixels.y);
