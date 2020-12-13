@@ -20,9 +20,23 @@ Vec3f PhongMaterial::shade(const Ray &ray, const Hit &hit,
 	// you should return zero for hits coming from behind the surface.
 	// Remember, when computing the specular lobe, you shouldn't add
 	// anything if the light is below the local horizon!
-
-	Vec3f answer = Vec3f(0.0f);
-
+	auto normal = hit.normal;
+	if (dir_to_light.dot(normal) < 0) {
+		if (shade_back) {
+			normal = -normal;
+		} else {
+			return Vec3f(0);
+		}
+	}
+	const auto d = FW::max(0.f, dir_to_light.dot(normal));
+	const auto& point = ray.pointAtParameter(hit.t);
+	const auto diffuse = incident_intensity * d * hit.material->diffuse_color(point);
+	
+	const auto v = ray.direction - 2.0f * (ray.direction.dot(normal) * normal);
+	const auto clamp = FW::max(FW::Vec3f(0, 0, 0), v.dot(dir_to_light));
+	const auto specular = incident_intensity * specular_color_ * Vec3f(FW::pow(clamp.x, exponent()), FW::pow(clamp.y, exponent()), FW::pow(clamp.z, exponent()));
+	
+	const auto answer = diffuse + specular;
 	return answer;
 }
 
