@@ -55,13 +55,10 @@ bool Plane::intersect( const Ray& r, Hit& h, float tmin ) const {
 	const auto n = normal_;
 	const auto d = offset_;
 	auto t = (d - r.origin.dot(n)) / (r.direction.dot(n));
-	const auto p = r.pointAtParameter(t);
-	// Comparing n dot p with an epsilon to remove grainy effects
-	if (FW::abs(n.dot(p) - d) < 0.0001 ) {
-		if (t < h.t && t >= tmin) {
-			h.set(t, material_, n);
-			return true;
-		}
+
+	if (t < h.t && t >= tmin) {
+		h.set(t, material_, n);
+		return true;
 	}
 	return false;
 }
@@ -148,6 +145,23 @@ bool Triangle::intersect( const Ray& r, Hit& h, float tmin ) const {
 	// YOUR CODE HERE (R6)
 	// Intersect the triangle with the ray!
 	// Again, pay attention to respecting tmin and h.t!
+
+	const auto& v0 = vertex(0), v1 = vertex(1), v2 = vertex(2);
+	const auto& v01 = v0 - v1;
+	const auto& v02 = v0 - v2;
+
+	Mat3f A;
+	A.setCol(0, v01);
+	A.setCol(1, v02);
+	A.setCol(2, r.direction);
+
+	Vec3f x = A.inverted() * (v0 - r.origin);
+	const auto& beta = x.x, gamma = x.y, t = x.z;
+	if (beta + gamma <= 1 && beta >= 0 && gamma >= 0 && t < h.t && t >= tmin) {
+		Vec3f n = (v2 - v0).cross(v2 - v1).normalized();
+		h.set(t, material_, n);
+		return true;
+	}
 	return false;
 }
 

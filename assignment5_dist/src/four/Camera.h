@@ -106,9 +106,9 @@ public:
 		// YOUR CODE HERE (R3)
 		// Generate a ray with the given screen coordinates, which you should assume lie in [-1,1]^2
 		// How to do this is described in the lecture notes.
-		const float d = 1 / FW::tan(fov_angle / 2);
-		const float x = point.x - center.x;
-		const float y = point.y - center.y;
+		const float d = 1.0f / FW::tan(fov_angle / 2);
+		const float x = point.x;
+		const float y = point.y;
 		const auto r = (x * horizontal + y * up + d * direction).normalized();
 		return Ray(center, r);
 	}
