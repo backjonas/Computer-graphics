@@ -101,10 +101,10 @@ void main()
 	if (useTextures)
 	{
 		// YOUR CODE HERE (R1)
-		// Fetch the diffuse material albedos at the texture coordinates of the fragment.
+		// Fetch the diffuese material albedos at the texture coordinates of the fragment.
 		// This should be a one-liner and the same for both diffuse and specular.
-		// diffuseColor = ...
-		// specularColor = ...
+		diffuseColor = texture(diffuseSampler, texCoordVarying);
+		specularColor = texture(specularSampler, texCoordVarying);
 	}
 
 	// diffuse only?
@@ -122,9 +122,8 @@ void main()
 		// Fetch the object space normal from the normal map and scale it.
 		// Then transform to camera space and assign to mappedNormal.
 		// Don't forget to normalize!
-		vec3 normalFromTexture = vec3(.0);
-		// normalFromTexture = ...
-			
+		vec3 normalFromTexture = texture(normalSampler,texCoordVarying).xyz * 2 - 1;
+		mappedNormal = normalize(normalToCamera * normalFromTexture);
 		// debug display: normals as read from the texture
 		if (renderMode == 2)
 		{
@@ -159,7 +158,8 @@ void main()
 
 		vec3 L = normalize(lightDirections[i]);
 		vec3 Li = lightIntensities[i];
-		vec3 diffuse;
+		vec3 diffuse = diffuseColor.xyz * max(0, dot(N, L)) * Li;
+		light_contribution += diffuse;
 
 		// YOUR CODE HERE (R3, R4, R5)
 		// Compute the GGX specular contribution of this light.
